@@ -4,16 +4,19 @@
 ## Table of Contents
 
 - [Demo](#demo)
-- [Usage](#usage)
-  - [Basic Usage](#basic-usage)
-    - [Pseudonymous Tracking](#pseudonymous-tracking)
-      - [The Consent Banner](#the-consent-banner)
-  - [Advanced Usage](#advanced-usage)
+- [Reveal.js tracking plugin](Reveal.js-tracking-plugin)
+	- [Usage](#usage)
+	  - [Basic Usage](#basic-usage)
+	    - [Pseudonymous Tracking](#pseudonymous-tracking)
+	      - [The Consent Banner](#the-consent-banner)
+	  - [Advanced Usage](#advanced-usage)
     - [Hints](#hints)
       - [Audios and Videos](#audios-and-videos)
       - [Quizzes](#quizzes)
     - [Default Configuration](#default-configuration)
   - [Request Body to Tracking API](#request-body-to-tracking-api)
+- [Django dashboard](#django-dashboard)
+	- [Dashboard usage](#dashboard-usage)
 - [License](#license)
 
 This repository contains a Django application, which uses tracking data to create
@@ -426,7 +429,7 @@ The django application provides a basic dashboard visualizing tracked data from 
  - Quiz usage & performance
  - Shortcut usage
 
-### Usage
+### Dashboard usage
 
 For a customized usage the `settings.py` file at Django/Django has to be configured. 
 For an in-depth guide how to adjust that file check out the [Django documentation](https://docs.djangoproject.com/en/4.1/ref/settings/).
