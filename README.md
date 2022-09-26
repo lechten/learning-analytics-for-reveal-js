@@ -1,9 +1,9 @@
-# reveal.js-tracking
+
+# learning analytics for reveal.js
 
 ## Table of Contents
 
 - [Demo](#demo)
-  - [Side Notes](#side-notes)
 - [Usage](#usage)
   - [Basic Usage](#basic-usage)
     - [Pseudonymous Tracking](#pseudonymous-tracking)
@@ -16,23 +16,10 @@
   - [Request Body to Tracking API](#request-body-to-tracking-api)
 - [License](#license)
 
-This plug-in allows detailed tracking of interactions within a reveal.js
-presentation. You are capable of defining to which API to send the tracking data
-to. Tracked interactions are
-
-- dwell times
-- slide transitions
-- clicking links
-- playing and pausing media (audio recordings, videos)
-- tracking quizzes
-
-It also includes a configurable consent banner that respects the viewers'
-privacy.
-
-If you only want to track slide transitions (Reveal's `slidechanged` event) and
-opening/closing of the overview (Reveal's `overviewshown` and `overviewhidden`
-events) and send them to Google Analytics, try the plug-in
-[reveal-ga](https://github.com/stevegrunwell/reveal-ga) instead.
+This repository contains a Django application, which uses tracking data to create
+a dashboard with visualizations. The tracking is heavily based on the 
+[reveal.js tracking plugin](https://github.com/pantajoe/reveal.js-tracking)
+with some slight adjustments to support learning analytics.
 
 ## Demo
 
@@ -43,84 +30,43 @@ To view the demo of this plug-in, make sure you have Docker,
 1. Install project dependencies with `npm install`
 2. Build the containers with `docker-compose build`
 3. And then fire up the API and the demo presentation with `docker-compose up`
-4. Setup the database with `docker-compose run web bundle exec rake db:create` and `docker-compose run web bundle exec rake db:migrate`
+4. Setup the database with `docker-compose run web python3 manage.py migrate`
+5. Create a superuser for the lecturer with ` docker-compose run -e DJANGO_SUPERUSER_PASSWORD=my_password web python3 manage.py createsuperuser --noinput --username admin --email admin@mail.de`
 
 On `http://localhost:8000`, you can enjoy the demo presentation.
 
-The API is accessible via `http://localhost:4567`. If you wish to see your
-latest tracking data from clicking through the demo presentation, simply visit
-`http://localhost:4567/last-tracked`. Optionally, you can also supply the user
-token that is saved in your cookies (the cookie key is `user_token`) or in your
-HTML local storage (call `localStorage.getItem('user_token')`) for tracking your
-demo presentation. Then, when accessing
-`http://localhost:4567/last-tracked/your-user-token-goes-here`, you can see the
-latest tracking data for that specific user in JSON format.
+On `http://localhost:8910`, you can enjoy the demo dashboard - but you have to track some data first.
 
-If you delete your localStorage and cookie, then you are treated as a new user.
+If you delete your cookies, then you are treated as a new user.
 Have fun!
 
-### Side Notes
 
-The API is a Sinatra application (see
-[sinatra](https://github.com/sinatra/sinatra)). Thus, if you want to see further
-tracking data of different users, you can use the Interactive Ruby Shell (irb)!
+## Reveal.js tracking plugin
+Based on [reveal.js tracking plugin](https://github.com/pantajoe/reveal.js-tracking)
+with some adjustments and additions:
 
-If the API is running in Docker, simply execute this to enter the `irb`:
+This plug-in allows detailed tracking of interactions within a reveal.js
+presentation. You are capable of defining to which API to send the tracking data
+to. Tracked interactions are
 
-```bash
-docker-compose run web bundle exec irb -I. -r app.rb
-```
+- dwell times
+- slide transitions
+- clicking links
+- playing and pausing media (audio recordings, videos)
+- tracking quizzes
+- tracking shortcuts
 
-There are two models with corresponding tables:
+It also includes a configurable consent banner that respects the viewers'
+privacy - content of banner has to be adjusted to conform GDPR.
 
-The `Student` model only has a field named `user_token` that it can be
-identified with. Several `TrackedSession`s are associated to a `Student`.
+If you only want to track slide transitions (Reveal's `slidechanged` event) and
+opening/closing of the overview (Reveal's `overviewshown` and `overviewhidden`
+events) and send them to Google Analytics, try the plug-in
+[reveal-ga](https://github.com/stevegrunwell/reveal-ga) instead.
 
-If you have a user token you want tracking data for different sessions for,
-simply type the following in the `irb`:
+### Usage
 
-```ruby
-# if you want a specific student
-student = Student.find_by(user_token: 'your-user-token')
-# if you want all students and select one from there
-students = Student.all
-student = students[3]
-
-# get the tracked sessions for the student
-tracked_sessions = student.tracked_sessions.order(created_at: :asc)
-
-# or if you want all tracked sessions and go from there
-tracked_sessions = TrackedSession.all
-```
-
-Then, to retrieve the tracking data for a specific session, use the Array
-accessor for the variable `tracked_sessions` (e.g. `tracked_sessions[2]` for the
-third session in that Array) and call this:
-
-```ruby
-# for the most recent one
-tracked_sessions.last.tracking_json
-
-# for the oldest one
-tracked_sessions.first.tracking_json
-
-# to get the length of the Array
-tracked_sessions.size
-
-# for any other session (here, the fourth)
-tracked_sessions[3].tracking_json
-```
-
-If you want to copy the JSON and view it in an editor, you can convert this to a
-JSON string:
-
-```ruby
-tracked_sessions[3].tracking_json.to_json
-```
-
-## Usage
-
-### Basic Usage
+#### Basic Usage
 
 Simply download this folder – you only need the `tracking.css` in the `css`
 folder and `tracking.js` in the `js` folder – and add it to your reveal.js
@@ -160,11 +106,12 @@ Reveal.initialize({
   tracking: {
     apiConfig: {
       authenticationAPI: {
-        // configure the API where to request a user token from
-        requestTokenEndpoint: 'https://my.platform/api/authentication/generate-token',
-      },
-      // configure where to send the tracked data
-      trackingAPI: 'https://my.platform/api/tracking',
+        // configure the APIs where to request a user and session token from
+        validateUserTokenEndpoint: 'http://localhost:8910/api/validate-user-token/',
+        validateSessionTokenEndpoint: 'http://localhost:8910/api/validate-session-token/',
+        requestTokenEndpoint: 'http://localhost:8910/api/generate-session-token/',
+        },
+        trackingAPI: 'http://localhost:8910/api/events/',
     },
     // configure the consent banner
     consentBanner: {
@@ -181,6 +128,10 @@ Reveal.initialize({
     media: true,
     // track slide transitions
     slideTransitions: true,
+    // track shortcuts
+    shortCuts: true,
+    //define list of shortcuts to track
+    shortCutsToTrack: ['shift-?'],
     // track events from other reveal.js plug-ins
     revealDependencies: {
       // track events from reveal.js-quiz plug-in
@@ -197,7 +148,7 @@ In order to be able to associate multiple tracked sessions for one person, a
 token is requested from an authentication API via `POST`
 (`tracking.apiConfig.authenticationAPI.requestTokenEndpoint`). This token is
 then sent with every tracked session to the tracking API. This token is stored
-in both a cookie and the HTML local storage for next sessions. Thus, the real
+in the cookie for next sessions. Thus, the real
 user remains anonymous while the tracked data has an increased value.
 
 This plug-in also allows to set a
@@ -227,11 +178,15 @@ set and send tracking data to the tracking API. However, since no user token
 will be sent with each tracking request, the data collected will be completely
 anonymous.
 
-##### The Consent Banner
+#### The Consent Banner
 
 The consent banner is displayed at the top of the presentation if enabled:
 
-![consent-banner](consent-banner-demo.png)
+The consent banner should be filled with informations to conform the GDPR like:
+ - Cookies that are saved
+ - Data processing that is done
+ - Storage duration of data
+ - Information regarding pseudonymization
 
 Any styles, HTML classes and texts for the consent banner can be configured. See
 [Advanced Usage](#advanced-usage).
@@ -286,6 +241,8 @@ Here are list of configuration options with their defaults:
 | `links`                                             | `true`                                                                   | whether to track clicks on links. You can configure whether to track clicks on internal links (pointing to slides) and external links by setting `links.internal` and `links.external` to `true` or `false` |
 | `media`                                             | `true`                                                                   | whether to track interactions on audios and videos. You can configure whether to track interactions on audios and videos by setting `media.audio` and `media.video` to `true` or `false`        |
 | `slideTransitions`                                  | `true`                                                                   | whether to track slide transitions                                                                                                                                                              |
+|`shortcuts`										| `true` 								 |whether to track shortcuts
+|`shortCutsToTrack`									| `['shift-?']`  					|which shortcuts to track
 | `revealDependencies.quiz`                           | `false`                                                                  | whether to track events in reveal.js plug-in [reveal.js-quiz](https://gitlab.com/schaepermeier/reveal.js-quiz)                                                                                  |
 
 #### Hints
@@ -367,6 +324,8 @@ Reveal.initialize({
   links: true,
   media: true,
   slideTransitions: true,
+  shortCuts: true,  
+  shortCutsToTrack: ['shift-?'],
   revealDependencies: {
     quiz: false,
   },
@@ -380,188 +339,104 @@ API. There is only one request per session and this is sent when the user closes
 the presentation (event `window.onpagehide`).
 
 ```jsonc
-{
-  // the user token
-  "userToken": "a-nice-user-token",
-  // presentation Url to identify the lecture
-  "presentationUrl": "https://my.presentation/current-lecture",
-  // total number of slides in the presentation
-  "totalNumberOfSlides": 29,
-  // progress in presentation when the user closed the presentation (between 0 and 1). can be float or integer
-  "finalProgress": 0.67823128904,
-  // total dwell time in the presentation
-  "totalDwellTime": "01:30:59",
-  // list of dwell times per slide
-  "dwellTimes": [
-    {
-      "type": "dwellTimePerSlide",
-      "dwellTime": "00:00:15",
-      "slideData": {
-        "slideNumber": 1,
-        "horizontalIndex": 0,
-        "verticalIndex": 0
+ {
+	\\ list with 10 events
+   "timeline":[
+      {
+         "type":"dwellTimePerSlide",
+         "dwellTime":"00:00:05",
+         "absolute_url":"http://localhost:8000/demo/#/",
+         "dateTime":"2022-09-26T05:40:50.471Z"
+      },
+      {
+         "type":"slideTransition",
+         "transitionDetails":{
+            "vertical":0,
+            "horizontal":1
+         },
+         "timestamp":"00:00:05",
+         "absolute_url":"http://localhost:8000/demo/#/",
+         "dateTime":"2022-09-26T05:40:50.471Z"
+      },
+      {
+         "type":"dwellTimePerSlide",
+         "dwellTime":"00:00:00",
+         "absolute_url":"http://localhost:8000/demo/#/1",
+         "dateTime":"2022-09-26T05:40:50.950Z"
+      },
+      {
+         "type":"slideTransition",
+         "transitionDetails":{
+            "vertical":0,
+            "horizontal":1
+         },
+         "timestamp":"00:00:05",
+         "absolute_url":"http://localhost:8000/demo/#/1",
+         "dateTime":"2022-09-26T05:40:50.950Z"
+      },
+      {
+         "type":"shortcut",
+         "shortcut":"control-shift-f",
+         "absolute_url":"http://localhost:8000/demo/#/2",
+         "dateTime":"2022-09-26T05:40:52.684Z"
+      },
+      {
+         "type":"shortcut",
+         "shortcut":"shift-?",
+         "absolute_url":"http://localhost:8000/demo/#/2",
+         "dateTime":"2022-09-26T05:40:53.955Z"
+      },
+      {
+         "type":"shortcut",
+         "shortcut":"shift-?",
+         "absolute_url":"http://localhost:8000/demo/#/2",
+         "dateTime":"2022-09-26T05:40:54.827Z"
+      },
+      {
+         "type":"shortcut",
+         "shortcut":"shift-?",
+         "absolute_url":"http://localhost:8000/demo/#/2",
+         "dateTime":"2022-09-26T05:40:55.244Z"
+      },
+      {
+         "type":"shortcut",
+         "shortcut":"shift-?",
+         "absolute_url":"http://localhost:8000/demo/#/2",
+         "dateTime":"2022-09-26T05:40:55.644Z"
+      },
+      {
+         "type":"dwellTimePerSlide",
+         "dwellTime":"00:00:07",
+         "absolute_url":"http://localhost:8000/demo/#/2",
+         "dateTime":"2022-09-26T05:40:57.958Z"
       }
-    },
-    {
-      "type": "dwellTimePerSlide",
-      "dwellTime": "00:00:08",
-      "slideData": {
-        "slideNumber": 2,
-        "horizontalIndex": 1,
-        "verticalIndex": 0
-      }
-    },
-    {
-      "type": "dwellTimePerSlide",
-      "dwellTime": "00:05:02",
-      "slideData": {
-        "slideNumber": 3,
-        "horizontalIndex": 1,
-        "verticalIndex": 1
-      }
-    },
-    {
-      "type": "dwellTimePerSlide",
-      "dwellTime": "00:06:09",
-      "slideData": {
-        "slideNumber": 4,
-        "horizontalIndex": 1,
-        "verticalIndex": 2
-      }
-    },
-    ...
-  ],
-  // detailed timeline of events
-  "timeline" : [
-    {
-      "type": "slideTransition",
-      "previousSlide": {
-        "slideNumber": 1,
-        "horizontalIndex": 0,
-        "verticalIndex": 0
-      },
-      "currentSlide": {
-        "slideNumber": 2,
-        "horizontalIndex": 1,
-        "verticalIndex": 0
-      },
-      "timestamp": "00:00:15"
-    },
-    {
-      "type": "slideTransition",
-      "previousSlide": {
-        "slideNumber": 2,
-        "horizontalIndex": 1,
-        "verticalIndex": 0
-      },
-      "currentSlide": {
-        "slideNumber": 3,
-        "horizontalIndex": 1,
-        "verticalIndex": 1
-      },
-      "timestamp": "00:00:23"
-    },
-    {
-      "type": "externalLink",
-      "timestamp": "00:04:20",
-      "metadata": {
-        "href": "https://github.com/hakimel/reveal.js",
-        "linkText": "reveal.js"
-      },
-      "slideData": {
-        "slideNumber": 3,
-        "horizontalIndex": 1,
-        "verticalIndex": 1
-      }
-    },
-    {
-      "type": "audio",
-      "mediaEvent": "play",
-      "timestamp": "00:03:12",
-      "metadata": {
-        "id": "audioplayer-3-1-0",
-        "mediaSource": "https://my.presentation/audios/help01.ogg"
-      },
-      "slideData": {
-        "slideNumber": 3,
-        "horizontalIndex": 1,
-        "verticalIndex": 1,
-        "mediaIndex": 0
-      }
-    },
-    {
-      "type": "audio",
-      "mediaEvent": "pause",
-      "finished": true,
-      "progress": 1,
-      "timestamp": "00:03:15",
-      "metadata": {
-        "id": "audioplayer-3-1-0",
-        "mediaSource": "https://my.presentation/audios/help01.ogg"
-      },
-      "slideData": {
-        "slideNumber": 3,
-        "horizontalIndex": 1,
-        "verticalIndex": 1,
-        "mediaIndex": 0
-      }
-    },
-    {
-      "type": "slideTransition",
-      "previousSlide": {
-        "slideNumber": 3,
-        "horizontalIndex": 1,
-        "verticalIndex": 1
-      },
-      "currentSlide": {
-        "slideNumber": 4,
-        "horizontalIndex": 1,
-        "verticalIndex": 2
-      },
-      "timestamp": "00:05:25"
-    },
-    {
-      "type": "quiz",
-      "quizEvent": "start",
-      "timestamp": "00:05:45",
-      "metadata": {
-        "id": "firstQuiz",
-        "name": "Test your knowledge!",
-        "topic": "What is reveal.js?",
-        "numberOfQuestions": 3
-      },
-      "slideData": {
-        "slideNumber": 4,
-        "horizontalIndex": 1,
-        "verticalIndex": 2
-      }
-    },
-    {
-      "type": "quiz",
-      "quizEvent": "complete",
-      "dwellTime": "00:05:00",
-      "completed": true,
-      "score": 2,
-      "timestamp": "00:10:45",
-      "metadata": {
-        "id": "firstQuiz",
-        "name": "Test your knowledge!",
-        "topic": "What is reveal.js?",
-        "numberOfQuestions": 3
-      },
-      "slideData": {
-        "slideNumber": 4,
-        "horizontalIndex": 1,
-        "verticalIndex": 2
-      }
-    },
-    ...
-  ]
+   ],
+   \\ metadata
+   "presentationUrl":"http://localhost:8000/demo/",
+   "totalNumberOfSlides":12,
+   "userToken":"3265557c-cfe4-47e2-8420-0fa5c084e9e1",
+   "sessionToken":"ad900d31-c092-4070-a6d8-d99b04038a90"
 }
 ```
+## Django dashboard
+
+The django application provides a basic dashboard visualizing tracked data from the [plugin](#reveal.js-tracking-plugin). Following visualizations are provided:
+ - Trend analysis on number of sessions, unique users, and new users
+ - Slide usage behaviour
+ - Quiz usage & performance
+ - Shortcut usage
+
+### Usage
+
+For a customized usage the `settings.py` file at Django/Django has to be configured. 
+For an in-depth guide how to adjust that file check out the [Django documentation](https://docs.djangoproject.com/en/4.1/ref/settings/).
+
+To start using the dashboard you have to create structural DB objects. To do go into the Django admin view at http://localhost:8910/admin/ and create entries for `TimePeriod`,  `Module`, and `Course` that fit your educational use case. Additionally create a `SlideSet` for each reveal.js presentation you want to track.
+
+The dashboard allows to filter regarding `Course` and `SlideSet` objects.
 
 ## License
 
 MIT licensed
 
-Copyright (C) 2020 Joe Pantazidis
+Copyright (C) 2022 Fabian Ingenhorst
