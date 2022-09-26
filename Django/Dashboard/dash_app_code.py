@@ -494,6 +494,10 @@ def update_graphs(course_value, slide_set_value, last_update_date):
     Create plots for shortcut section
 """
 def create_shortcut_section(df_sessions_filtered, students_in_course):
+    if df_shortcut_events.empty:
+        empty_pie = px.pie(title="No quiz data tracked yet")
+        return empty_pie, empty_pie
+
     relevant_shortcut_events = df_shortcut_events[
         df_shortcut_events['session_id'].isin(df_sessions_filtered['session_token'])]
     relevant_shortcut_events.rename(columns={'session_id': 'session_token'}, inplace=True)
@@ -553,6 +557,9 @@ def create_shortcut_section(df_sessions_filtered, students_in_course):
     Create plots for quiz section
 """
 def create_relative_quiz_pies(df_sessions_filtered, students_in_course):
+    if df_quiz_events.empty:
+        empty_pie = px.pie(title="No quiz data tracked yet")
+        return empty_pie, empty_pie, empty_pie, empty_pie
     relevant_quiz_events = df_quiz_events[df_quiz_events['session_id'].isin(df_sessions_filtered['session_token'])]
     relevant_quiz_events.rename(columns={'session_id': 'session_token'}, inplace=True)
     df_quiz_events_users = relevant_quiz_events.merge(df_sessions_filtered, on='session_token', how='left')
