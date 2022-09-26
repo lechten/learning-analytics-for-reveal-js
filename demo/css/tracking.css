@@ -1,0 +1,114 @@
+.consent-banner {
+  font-family: sans-serif;
+  top: 0;
+  margin: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  padding: 1rem;
+  text-align: center;
+  color: #fcfcfc;
+  position: fixed;
+  justify-content: center;
+  background-color: #303536;
+  z-index: 9999;
+  transition: all ease-out .2s;
+}
+
+.consent-banner--info-text {
+  margin: auto 3.2rem auto 0;
+}
+
+.consent-banner--more-link {
+  font-weight: bold;
+  color: #fcfcfc;
+  text-decoration: underline;
+}
+
+.consent-banner--more-link:hover,
+.consent-banner--more-link:focus {
+  color: #cd5e5e !important;
+}
+
+.consent-banner--more-link:visited {
+  color: #fcfcfc;
+}
+
+.consent-banner--button {
+  color: #fcfcfc;
+  background-color: #00cc00;
+  border-radius: .25rem;
+  border: none;
+  width: 6rem;
+  font-size: small;
+  font-weight: bold;
+  cursor: pointer;
+  width: auto;
+  padding: 1rem;
+  margin-right: 2rem;
+}
+
+.consent-banner--button:hover,
+.consent-banner--button:focus {
+  background-color: #009933;
+  color: #d6d6d6;
+}
+
+.consent-banner--decline {
+  color: #fcfcfc;
+  background-color: #bd3a3a;
+  border-radius: .25rem;
+  border: none;
+  width: 6rem;
+  font-size: small;
+  font-weight: bold;
+  cursor: pointer;
+  width: auto;
+  padding: 1rem;
+}
+
+.consent-banner--decline:hover,
+.consent-banner--decline:focus {
+  background-color: #a03131;
+  color: #d6d6d6;
+}
+
+.consent-banner--close {
+  cursor: pointer;
+  height: auto;
+  top: .25rem;
+  right: 1rem;
+  position: fixed;
+  font-size: x-large;
+}
+
+.consent-banner--close:hover {
+  color: #adadad;
+}
+
+.consent-menu {
+  font-family: sans-serif;
+  top: 0;
+  margin: 0;
+  right: 0;
+  display: flex;
+  padding: 1rem;
+  text-align: center;
+  color: #fcfcfc;
+  position: fixed;
+  justify-content: center;
+  z-index: 9990;
+  transition: all ease-out .2s;
+}
+
+.consent-menu--button {
+  color: #669999;
+  border-radius: .25rem;
+  border-color: #669999;
+  width: 6rem;
+  font-size: small;
+  font-weight: bold;
+  cursor: pointer;
+  width: auto;
+  padding: 1rem;
+}

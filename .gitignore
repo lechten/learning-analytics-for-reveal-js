@@ -1,0 +1,27 @@
+app/tmp/
+node_modules/
+*.pyc
+*~
+.DS_Store
+__pycache__
+
+# Ignore virtual environments
+myvenv/
+venv/
+
+# Ignore staticfiles
+/static
+/Django/staticfiles/
+**/migrations/**
+
+# Ignore key files
+key
+key.pub
+
+# Ignore IDE project files
+.idea/
+.vscode/
+
+# Ignore log files
+*.log
+
