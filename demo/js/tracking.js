@@ -104,6 +104,8 @@ const RevealTracking = window.RevealTracking || (function () {
    *   audio: true,
    *   video: true,
    * },
+   * shortCuts: true,
+   * shortCutsToTrack: ['shift-?'],
    * slideTransitions: true,
    * revealDependencies: {
    *   * requires quiz plug-in

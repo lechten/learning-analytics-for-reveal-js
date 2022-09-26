@@ -870,6 +870,9 @@ def validate_ddl_and_filter_session(slide_set_value, course_value):
 
 if all_tables:
     app.layout = serve_layout()
+else:
+    app.layout = html.Div(["No data logged so far"])
+
 
 if __name__ == '__main__':
     app.run_server(8052, debug=False)
