@@ -2,7 +2,7 @@ asgiref==3.4.1
 Django==3.2.6
 djangorestframework==3.12.4
 django-cors-headers==3.13.0
-django_plotly_dash==2.0.0
+django_plotly_dash==2.1.4
 psycopg2==2.9.3
 channels==2.4.0
 bootstrap4==0.1.0
